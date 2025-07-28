@@ -13,8 +13,8 @@ from collections import Counter
 from pprint import pprint
 import pickle
 import os
-import numpy as np
 from pprint import pprint
+np.set_printoptions(formatter={'int': lambda x: str(int(x))})
 
 class Hands:
     def __init__(self, left_hand, right_hand, player_name):
@@ -108,7 +108,7 @@ def play_game(player1_name,player2_name,trace=False):
 game_hist_results=[]
 game_outcomes=[]
 game_turns_count=[]
-number_games=1000000
+number_games=1000
 game_pickle_file = "finger_game_results.pkl"
 game_trace=[]
 try:
@@ -128,17 +128,21 @@ for n in range(0 ,number_games):
     game_turns_count.append(res[1])
     game_trace.append(res[2])
 
+#%%
 
 counts = Counter(game_outcomes)
 print("Number of games added", len(game_outcomes))
 print("Player 1", counts[1]) 
 print("Player 2", counts[2])  
 counts2 = Counter(game_turns_count)
-pprint(counts2)
+print(counts2)
 
 unique, counts = np.unique(game_turns_count, return_counts=True)
-count_dict = dict(zip(unique, counts))
-pprint(count_dict)
+count_dict = {k.item(): v.item() for k, v in zip(unique, counts)}
+# print the counts dictionary in a nice format
+print("Turns count in history:")
+print(count_dict)
+#%%
 
 # print cummulative counts
 print("Number of games in pickle", len(game_hist_results))
@@ -149,13 +153,14 @@ print("Player 1 wins:", game_hist_outcomes.count(1))
 print("Player 2 wins:", game_hist_outcomes.count(2))
 # Print turns count
 unique, counts = np.unique(game_hist_turns_count, return_counts=True)
-count_dict = dict(zip(unique, counts))
+count_dict = { k.item():v.item() for k,v  in zip(unique, counts)}
 print("Turns count in history:")
-pprint(count_dict)
+print(count_dict)
 
-# Save the results to a pickle file
+
+# Save the results to a pickle file 
 with open(game_pickle_file, 'wb') as f:
-    pickle.dump(game_hist_results, f)
+    pickle.dump(game_hist_results, f, protocol=pickle.HIGHEST_PROTOCOL)
 print("Saved results to", game_pickle_file)
 
 
