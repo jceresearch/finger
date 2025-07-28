@@ -1,9 +1,20 @@
-# main loop for finger game to check how deep is the tree/game and who wins
-# %%
+#%%
+
+'''
+Main loop for finger game to check how deep is the tree/game and who wins
+
+'''
+
+
 import pandas as pd
 import numpy as np
 import random
-
+from collections import Counter
+from pprint import pprint
+import pickle
+import os
+import numpy as np
+from pprint import pprint
 
 class Hands:
     def __init__(self, left_hand, right_hand, player_name):
@@ -53,11 +64,11 @@ class Hands:
 
 
 # %%
-# main loop to play the game
+# function to play one game
 
-def play_game(trace=False):
-    player1 = Hands(1, 1, "Lu")
-    player2 = Hands(1, 1, "Dad")
+def play_game(player1_name,player2_name,trace=False):
+    player1 = Hands(1, 1, player1_name)
+    player2 = Hands(1, 1, player2_name)
     turn_count = 0
     game_trace=[]
     while not (player1.is_game_lost() or player2.is_game_lost()):
@@ -94,26 +105,59 @@ def play_game(trace=False):
             print("Won 2 in turns:", turn_count, "Trace:",game_trace)
         return(2,turn_count,game_trace)
 
-game_results=[]
-game_length=[]
+game_hist_results=[]
+game_outcomes=[]
+game_turns_count=[]
 number_games=1000000
+game_pickle_file = "finger_game_results.pkl"
+game_trace=[]
+try:
+    with open(game_pickle_file, 'rb') as f:
+        game_hist_results = pickle.load(f)
+    print("Loaded previous results from", game_pickle_file)
+except (FileNotFoundError, EOFError):
+    print("No previous results found, starting new games history")
+    if os.path.exists(game_pickle_file):
+        os.remove(game_pickle_file)
+        print("Removed old results file", game_pickle_file) 
+
 for n in range(0 ,number_games):
-    res=play_game()
-    game_results.append(res[0])
-    game_length.append(res[1])
-    
-from collections import Counter
+    res=play_game("Lu", "Dad", trace=False)
+    game_hist_results.append(res)
+    game_outcomes.append(res[0])
+    game_turns_count.append(res[1])
+    game_trace.append(res[2])
 
 
-counts = Counter(game_results)
-print("Number of games", len(game_results))
+counts = Counter(game_outcomes)
+print("Number of games added", len(game_outcomes))
 print("Player 1", counts[1]) 
 print("Player 2", counts[2])  
-counts2 = Counter(game_length)
+counts2 = Counter(game_turns_count)
+pprint(counts2)
 
-import numpy as np
-from pprint import pprint
-unique, counts = np.unique(game_length, return_counts=True)
+unique, counts = np.unique(game_turns_count, return_counts=True)
 count_dict = dict(zip(unique, counts))
 pprint(count_dict)
+
+# print cummulative counts
+print("Number of games in pickle", len(game_hist_results))
+game_hist_outcomes = [res[0] for res in game_hist_results]
+game_hist_turns_count = [res[1] for res in game_hist_results]
+game_hist_trace = [res[2] for res in game_hist_results]
+print("Player 1 wins:", game_hist_outcomes.count(1))
+print("Player 2 wins:", game_hist_outcomes.count(2))
+# Print turns count
+unique, counts = np.unique(game_hist_turns_count, return_counts=True)
+count_dict = dict(zip(unique, counts))
+print("Turns count in history:")
+pprint(count_dict)
+
+# Save the results to a pickle file
+with open(game_pickle_file, 'wb') as f:
+    pickle.dump(game_hist_results, f)
+print("Saved results to", game_pickle_file)
+
+
+#%%
 
